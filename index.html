@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Tracker PRO</title>
+  <title>SafeTrack</title>
 
   <link rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -12,54 +12,126 @@
     body {
       margin: 0;
       font-family: Arial;
-      background: #0f172a;
+      background: #0b1220;
       color: white;
     }
 
-    header {
+    /* TOP BAR */
+    .topbar {
       padding: 15px;
       background: #111827;
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      border: none;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
+    .title {
+      font-size: 18px;
+      font-weight: bold;
     }
 
-    #map {
-      height: 80vh;
-      width: 100%;
+    .status {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: #1f2937;
     }
 
-    .panel {
+    /* CARDS */
+    .cards {
+      display: flex;
+      gap: 10px;
       padding: 10px;
+    }
+
+    .card {
+      flex: 1;
+      background: #1f2937;
+      padding: 10px;
+      border-radius: 12px;
       text-align: center;
+      font-size: 12px;
+    }
+
+    /* MAP */
+    #map {
+      height: 60vh;
+      margin: 10px;
+      border-radius: 15px;
+    }
+
+    /* FLOATING SOS */
+    .sos {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: red;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 50%;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #111827;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      font-size: 12px;
+    }
+
+    .nav-item {
+      text-align: center;
+      color: white;
+    }
+
+    button.start {
+      background: #2563eb;
+      border: none;
+      padding: 10px;
+      color: white;
+      border-radius: 10px;
+      width: 90%;
+      margin: 10px;
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <h2>📍 Family Tracker PRO</h2>
-</header>
+<div class="topbar">
+  <div class="title">SafeTrack</div>
+  <div class="status" id="status">Offline</div>
+</div>
 
-<div class="panel">
-  <button onclick="startTracking()">Start Tracking</button>
-  <button onclick="sendSOS()">🚨 SOS</button>
+<button class="start" onclick="startTracking()">Start Tracking</button>
+
+<div class="cards">
+  <div class="card">📡 GPS Ready</div>
+  <div class="card">🌍 Live Mode</div>
 </div>
 
 <div id="map"></div>
 
+<button class="sos" onclick="sendSOS()">SOS</button>
+
+<div class="bottom-nav">
+  <div class="nav-item">Home</div>
+  <div class="nav-item">Map</div>
+  <div class="nav-item">History</div>
+  <div class="nav-item">Settings</div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+
 const BIN_ID = "6a01c74a250b1311d808283c";
 const API_KEY = "YOUR_MASTER_KEY";
 
@@ -79,6 +151,9 @@ function initMap() {
 initMap();
 
 function startTracking() {
+
+  document.getElementById("status").innerText = "LIVE";
+
   navigator.geolocation.watchPosition(async (pos) => {
 
     const lat = pos.coords.latitude;
@@ -99,12 +174,14 @@ function startTracking() {
     });
 
   });
+
 }
 
 function sendSOS() {
-  alert("🚨 SOS Sent (you can upgrade this later)");
+  alert("🚨 Emergency alert sent!");
 }
+
 </script>
 
 </body>
-  </html>
+</html>
