@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SafeTrack</title>
+  <title>Family Tracker PRO</title>
 
   <link rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -16,18 +16,12 @@
       color: white;
     }
 
-    /* TOP BAR */
     .topbar {
       padding: 15px;
       background: #111827;
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: bold;
     }
 
     .status {
@@ -37,68 +31,35 @@
       background: #1f2937;
     }
 
-    /* CARDS */
-    .cards {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-    }
-
-    .card {
-      flex: 1;
-      background: #1f2937;
-      padding: 10px;
-      border-radius: 12px;
-      text-align: center;
-      font-size: 12px;
-    }
-
-    /* MAP */
     #map {
-      height: 60vh;
+      height: 70vh;
       margin: 10px;
       border-radius: 15px;
     }
 
-    /* FLOATING SOS */
-    .sos {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      background: red;
-      color: white;
-      border: none;
-      padding: 15px;
-      border-radius: 50%;
-      font-weight: bold;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    }
-
-    /* BOTTOM NAV */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #111827;
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      font-size: 12px;
-    }
-
-    .nav-item {
-      text-align: center;
-      color: white;
-    }
-
-    button.start {
-      background: #2563eb;
-      border: none;
+    .controls {
       padding: 10px;
-      color: white;
+      text-align: center;
+    }
+
+    button {
+      padding: 12px;
+      margin: 5px;
+      border: none;
       border-radius: 10px;
-      width: 90%;
-      margin: 10px;
+      cursor: pointer;
+      width: 45%;
+      font-weight: bold;
+    }
+
+    .start {
+      background: #2563eb;
+      color: white;
+    }
+
+    .sos {
+      background: #ef4444;
+      color: white;
     }
   </style>
 </head>
@@ -106,37 +67,27 @@
 <body>
 
 <div class="topbar">
-  <div class="title">SafeTrack</div>
+  <div>📍 Family Tracker PRO</div>
   <div class="status" id="status">Offline</div>
-</div>
-
-<button class="start" onclick="startTracking()">Start Tracking</button>
-
-<div class="cards">
-  <div class="card">📡 GPS Ready</div>
-  <div class="card">🌍 Live Mode</div>
 </div>
 
 <div id="map"></div>
 
-<button class="sos" onclick="sendSOS()">SOS</button>
-
-<div class="bottom-nav">
-  <div class="nav-item">Home</div>
-  <div class="nav-item">Map</div>
-  <div class="nav-item">History</div>
-  <div class="nav-item">Settings</div>
+<div class="controls">
+  <button class="start" onclick="startTracking()">Start Tracking</button>
+  <button class="sos" onclick="sendSOS()">SOS</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-const BIN_ID = "6a01c74a250b1311d808283c";
-const API_KEY = "YOUR_MASTER_KEY";
+const BIN_ID = "6a01c74a250b1311c333bb63";
+const API_KEY = "YOUR_MASTER_KEY_HERE";
 
 let map;
 let marker;
+let watchId = null;
 
 function initMap() {
   map = L.map('map').setView([6.5244, 3.3792], 13);
@@ -152,33 +103,58 @@ initMap();
 
 function startTracking() {
 
-  document.getElementById("status").innerText = "LIVE";
+  document.getElementById("status").innerText = "Requesting GPS...";
 
-  navigator.geolocation.watchPosition(async (pos) => {
+  if (!navigator.geolocation) {
+    alert("GPS not supported on this device");
+    return;
+  }
 
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
+  watchId = navigator.geolocation.watchPosition(
+    async (pos) => {
 
-    marker.setLatLng([lat, lng]);
-    map.setView([lat, lng]);
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
 
-    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": API_KEY
-      },
-      body: JSON.stringify({
-        location: { lat, lng, time: new Date() }
-      })
-    });
+      document.getElementById("status").innerText = "LIVE";
 
-  });
+      marker.setLatLng([lat, lng]);
+      map.setView([lat, lng]);
 
+      try {
+        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+          },
+          body: JSON.stringify({
+            location: {
+              lat,
+              lng,
+              time: new Date().toISOString()
+            }
+          })
+        });
+      } catch (err) {
+        console.log("Save error:", err);
+      }
+
+    },
+    (err) => {
+      document.getElementById("status").innerText = "GPS blocked";
+      alert("Location error: " + err.message);
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    }
+  );
 }
 
 function sendSOS() {
-  alert("🚨 Emergency alert sent!");
+  alert("🚨 SOS sent (upgrade later to real alert system)");
 }
 
 </script>
